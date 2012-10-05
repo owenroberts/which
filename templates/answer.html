@@ -1,0 +1,24 @@
+{% extends "layout/main.html" %}
+
+{% block body %}
+
+<div class="answer-div">
+	<h2>user: {{ user.name }}</h2>
+	{% for a in user.answer %}
+	<p>answered <b>{{ a|replace("_"," ") }}</b></p>
+	{% endfor %}
+	<p>
+	{% if user.answer[0] == 'left' %}
+	you got it!
+	{% elif user.answer[0] == 'right' %}
+	you fucking mororn!!!
+	{% endif %}
+
+	</p>
+
+	<p>added: {{ user.timestamp }} | id: {{ user.id }}</p>
+
+</div>
+
+
+{% endblock %}

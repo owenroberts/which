@@ -1,20 +1,64 @@
 import os, datetime
 
-from flask import Flask, request # Retrieve Flask, our framework
+from flask import Flask, request, render_template, redirect, abort # Retrieve Flask, our framework
 from flask import render_template
+
+# import all of mongoengine
+from mongoengine import *
+
+# import data models
+import models
+
 
 app = Flask(__name__)   # create our flask app
 
+# --------- Database Connection ---------
+# MongoDB connection to MongoLab's database
+connect('mydata', host=os.environ.get('MONGOLAB_URI'))
+print "Connecting to MongoLabs"
+
+answers = ['left', 'right']
 
 
 @app.route('/')
 def index():
-    message = 'Which one is a butt?'
     img1 = "static/img/butt1.png"
     img2 = "static/img/notbutt1.png"
-    return render_template('index.html', message=message, img1=img1, img2=img2)
+    
+    templateData = {
+		'users' : models.User.objects(),
+		'answers' : answers
+	}
+	
+    return render_template('index.html', img1=img1, img2=img2, **templateData)
 
+@app.route('/answer', methods=["POST"])
+def answer():
+	app.logger.debug('idea form response data')
+	app.logger.debug(request.form)
+	app.logger.debug('list of submitted categories')
+	app.logger.debug(request.form.getlist('categories'))
 
+	# get form data - create new idea
+	user = models.User()
+	user.name = request.form.get('user','anonymous')
+	user.answer = request.form.getlist('answer')
+	
+	user.save()
+
+	templateData = {
+		'user' : user
+	}
+
+	# render and return the template
+	return render_template('answer.html', **templateData)
+	
+@app.route('/users')
+def users():
+	templateData = {
+		'users' : models.User.objects()
+	}
+	return render_template("users.html", **templateData)
 
 @app.route('/right')
 def right():
