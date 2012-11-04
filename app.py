@@ -1,4 +1,4 @@
-import os, datetime
+import os, re, datetime
 
 from flask import Flask, request, render_template, redirect, abort # Retrieve Flask, our framework
 from flask import render_template
@@ -11,6 +11,7 @@ import models
 
 
 app = Flask(__name__)   # create our flask app
+app.config['CSRF_ENABLED'] = False
 
 # --------- Database Connection ---------
 # MongoDB connection to MongoLab's database
@@ -20,43 +21,71 @@ print "Connecting to MongoLabs"
 answers = ['left', 'right']
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'] )
 def index():
-    img1 = "static/img/butt1.png"
-    img2 = "static/img/notbutt1.png"
-    
-    templateData = {
-		'users' : models.User.objects(),
-		'answers' : answers
-	}
 	
-    return render_template('index.html', img1=img1, img2=img2, **templateData)
-
-@app.route('/answer', methods=["POST"])
-def answer():
-	app.logger.debug('idea form response data')
-	app.logger.debug(request.form)
-	app.logger.debug('list of submitted categories')
-	app.logger.debug(request.form.getlist('categories'))
-
-	# get form data - create new idea
-	user = models.User()
-	user.name = request.form.get('user','anonymous')
-	user.answer = request.form.getlist('answer')
+	# get Answer form from models.py
+	user_form = models.UserForm(request.form)
 	
-	user.save()
+	# if form was submitted and it is valid...
+	if request.method == "POST" and user_form.validate():
+		
+		# get form data - create new idea
+		user = models.User()
+		user.name = request.form.get('name')
+		user.answer = request.form.get('answer')
+		
+		user.save() # save it
 
+		# redirect to the new idea page
+		return redirect('/user/%s' % user.name)
+	
+	else:
+
+		# for form management, checkboxes are weird (in wtforms)
+		# prepare checklist items for form
+		# you'll need to take the form checkboxes submitted
+		# and idea_form.categories list needs to be populated.
+		if request.method=="POST" and request.form.getlist('answers'):
+			for c in request.form.getlist('answers'):
+				idea_form.answers.append_entry(c)
+
+		# render the template
+		
+		
+		templateData = {
+			'users' : models.User.objects(),
+			'answers' : answers,
+			'form' : user_form
+		}
+
+		return render_template("main.html",img1 = "static/img/butt1.png", img2 = "static/img/notbutt1.png", **templateData)
+	
+
+@app.route('/user/<user_name>')
+def user_answer(user_name):
+	
+	# get idea by idea_slug
+	try:
+		user = models.User.objects.get(name=user_name)
+	except:
+		abort(404)
+			
 	templateData = {
 		'user' : user
 	}
-
+	app.logger.debug(templateData)
+	
 	# render and return the template
 	return render_template('answer.html', **templateData)
 	
 @app.route('/users')
 def users():
+	
+	users = models.User.objects().order_by('-timestamp')
+	
 	templateData = {
-		'users' : models.User.objects()
+		'users' : users
 	}
 	return render_template("users.html", **templateData)
 

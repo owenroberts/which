@@ -3,7 +3,7 @@
 {% block body %}
 
 {% for a in users|sort %}
-<p> {{ a.name }}: {{ a.answer[0] }} </p>
+<p> {{ a.name }}: {{ a.answer}} | {{ a.timestamp }} </p>
 {% endfor %}
 
 {% endblock %}

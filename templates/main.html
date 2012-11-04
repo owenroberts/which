@@ -1,0 +1,42 @@
+{% from "_form_helpers.html" import render_textarea %}
+{% extends "layout/main.html" %}
+
+{% block body %}
+
+<a href="/right"><img src="{{ img1 }}" /></a>
+<a href="/wrong"><img src="{{ img2 }}" /></a>
+<hr>
+
+<div class="answer-div">
+
+	<form method="POST" action="/">
+		<label>left or right?</label>
+		
+		{% if form.errors %}
+		
+			<ul class="errors">
+				{% for field_name, field_errors in form.errors|dictsort if field_errors %}
+					{% for error in field_errors %}
+						<li class="alert">{{ form[field_name].name }}: {{ error }}</li>
+					{% endfor %}
+				{% endfor %}
+			</ul>
+		{% endif %}
+		
+		<br>
+		enter name: {{ form.name }}		
+		<br>
+		<label>answer:</label>
+		{# comment - loop through categories and create checkboxes #}
+		{% for a in answers|sort %}
+		<input type="radio" name="answer" value= "{{ a|replace(" ","_") }}" > {{ a }} </input>
+		{% endfor %}
+
+
+		<button type="submit" class="btn btn-primary">submit answer</button>
+	</form>
+</div>
+
+{% endblock %}
+
+

@@ -4,14 +4,12 @@
 
 <div class="answer-div">
 	<h2>user: {{ user.name }}</h2>
-	{% for a in user.answer %}
-	<p>answered <b>{{ a|replace("_"," ") }}</b></p>
-	{% endfor %}
+	<p>answered <b>{{ user.answer}}</b></p>
 	<p>
-	{% if user.answer[0] == 'left' %}
+	{% if user.answer == 'left' %}
 	you got it!
-	{% elif user.answer[0] == 'right' %}
-	you fucking mororn!!!
+	{% elif user.answer == 'right' %}
+	you  moron!!!
 	{% endif %}
 
 	</p>
