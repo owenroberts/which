@@ -91,13 +91,17 @@ def index():
 		user = session['username']
 	else:
 		user = None
+		
 #		return 'Logged in as %s' % escape(session['username'])
 #	return 'You are not logged in'
 	
 	images = models.Image.objects()
 	users = models.User.objects().order_by('-score', )
 	# app.logger.info(images)
-		
+	
+	if 	'score' not in session:
+		score = session['score']
+	
 	templeData = {
 		'images' : images,
 		'user'	: user,
