@@ -100,6 +100,8 @@ def index():
 	# app.logger.info(images)
 	
 	if 	'score' not in session:
+		app.logger.info(session)
+		session['score'] = 0
 		score = session['score']
 	
 	templeData = {
@@ -110,7 +112,7 @@ def index():
 	}
 
 	app.logger.info(user)
-
+	
 	return render_template("main.html", **templeData)
 
 
