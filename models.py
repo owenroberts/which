@@ -6,9 +6,8 @@ from datetime import datetime
 
 class User(Document):
 
-	name = StringField(max_length=120, required=True)
-	answer = StringField(required=True)
-	score = 0 #IntField default = 0
+	name = StringField(max_length=120, unique=True)
+	score = IntField(default=0)
 	
 
 	# Timestamp will record the date and time idea was created.
@@ -20,6 +19,8 @@ class Image(Document):
 	
 	src = StringField(max_length=120, required=True)
 	isbutt = BooleanField(required=True)
+	
+ImageForm = model_form(Image)
 
 """
 look at

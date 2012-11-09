@@ -3,39 +3,40 @@
 
 {% block body %}
 
-<a href="/right"><img src="{{ img1 }}" /></a>
-<a href="/wrong"><img src="{{ img2 }}" /></a>
-<hr>
+<div id="left">
+	<div id="imgs">
+		<form method="POST" action="/rev">
+			{% for i in images|sort %}
+			<a href="/vote/{{i.id}}"><img src="{{ i.src }}" /></a>
+			{% endfor %}
+		</form>
+	</div>
 
-<div class="answer-div">
-
-	<form method="POST" action="/">
-		<label>left or right?</label>
-		
-		{% if form.errors %}
-		
-			<ul class="errors">
-				{% for field_name, field_errors in form.errors|dictsort if field_errors %}
-					{% for error in field_errors %}
-						<li class="alert">{{ form[field_name].name }}: {{ error }}</li>
-					{% endfor %}
-				{% endfor %}
-			</ul>
+	<div id="display-score">
+		{% if user != None %}
+		<h3>SCORE: {{score}}</h3>
+		<h3>USER: {{user}}</h3>
+		{% else %}
+		<h3>SCORE: 0</h3>
 		{% endif %}
-		
-		<br>
-		enter name: {{ form.name }}		
-		<br>
-		<label>answer:</label>
-		{# comment - loop through categories and create checkboxes #}
-		{% for a in answers|sort %}
-		<input type="radio" name="answer" value= "{{ a|replace(" ","_") }}" > {{ a }} </input>
-		{% endfor %}
+	</div>
 
-
-		<button type="submit" class="btn btn-primary">submit answer</button>
-	</form>
+	<div id="login">
+		{% if user == None %}
+		<a href="/login">login</a>
+		{% else %}
+		<p>You are logged in as {{user}}</p>
+		<a href="/logout">logout</a>
+		{% endif %}
+	</div>
 </div>
+<div id="hiscore">
+	<h2>HI SCORES</h2>
+	{% for u in users %}
+	<p><b>{{u.name}}</b> score: {{u.score}}</p>
+	{% endfor %}
+</div>
+
 
 {% endblock %}
 

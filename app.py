@@ -2,6 +2,7 @@ import os, re, datetime
 
 from flask import Flask, request, render_template, redirect, abort # Retrieve Flask, our framework
 from flask import render_template
+from flask import session, url_for, escape
 
 # import all of mongoengine
 from mongoengine import *
@@ -18,49 +19,97 @@ app.config['CSRF_ENABLED'] = False
 connect('mydata', host=os.environ.get('MONGOLAB_URI'))
 print "Connecting to MongoLabs"
 
-answers = ['left', 'right']
+
+@app.route('/buildimages', methods=['GET'])
+def buildimages():
+	
+	imgbutt = models.Image()
+	imgbutt.src = 'static/img/butt1.png'
+	imgbutt.isbutt = True
+	imgbutt.save()
+	
+	imgnot = models.Image()
+	imgnot.src = 'static/img/notbutt1.png'
+	imgnot.isbutt = False
+	imgnot.save()
+	
+	return "created"
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+	if request.method == 'POST':
+		session['username'] = request.form['username']
+		session['score'] = 0 # query all votes for username - len(query)
+		# session['score'] = models.Vote.objects(username=session['username']).count()
+		
+		return redirect(url_for('index'))
+	return '''
+		<form action="" method="POST">
+			<p><input type="text" name=username>
+			<p><input type=submit value=Login>
+		</form>
+	'''
+
+@app.route('/logout')
+def logout():
+	# remove the username from the session if it's there
+	session.pop('username', None)
+	return redirect(url_for('index'))
 
 
-@app.route('/', methods=['GET', 'POST'] )
+# accepting a vote with an image ID
+# record the vote for isbutt
+@app.route('/vote/<imgid>')
+def vote(imgid):
+	
+	# get the voted image
+	img = models.Image.objects.get(id=imgid)
+	if img and 'username' in session:
+		if img.isbutt == True:
+			session['score'] = session['score'] + 1
+		else:
+			session['score'] = session['score'] - 1
+		
+		
+		user, wasCreated = models.User.objects.get_or_create(name=session['username'])
+		user.score = session['score']
+		user.save()
+		
+		#app.logger.info(user)
+		return redirect('/') 
+		
+	else:
+		# img not found
+		return redirect('/')
+	
+
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
 	
-	# get Answer form from models.py
-	user_form = models.UserForm(request.form)
-	
-	# if form was submitted and it is valid...
-	if request.method == "POST" and user_form.validate():
-		
-		# get form data - create new idea
-		user = models.User()
-		user.name = request.form.get('name')
-		user.answer = request.form.get('answer')
-		
-		user.save() # save it
-
-		# redirect to the new idea page
-		return redirect('/user/%s' % user.name)
-	
+	if 'username' in session:
+		user = session['username']
 	else:
-
-		# for form management, checkboxes are weird (in wtforms)
-		# prepare checklist items for form
-		# you'll need to take the form checkboxes submitted
-		# and idea_form.categories list needs to be populated.
-		if request.method=="POST" and request.form.getlist('answers'):
-			for c in request.form.getlist('answers'):
-				idea_form.answers.append_entry(c)
-
-		# render the template
-		
-		
-		templateData = {
-			'users' : models.User.objects(),
-			'answers' : answers,
-			'form' : user_form
-		}
-
-		return render_template("main.html",img1 = "static/img/butt1.png", img2 = "static/img/notbutt1.png", **templateData)
+		user = None
+#		return 'Logged in as %s' % escape(session['username'])
+#	return 'You are not logged in'
 	
+	images = models.Image.objects()
+	users = models.User.objects().order_by('-score', )
+	# app.logger.info(images)
+		
+	templeData = {
+		'images' : images,
+		'user'	: user,
+		'users' : users,
+		'score' : session['score']
+	}
+
+	app.logger.info(user)
+
+	return render_template("main.html", **templeData)
+
+
 
 @app.route('/user/<user_name>')
 def user_answer(user_name):
@@ -89,15 +138,6 @@ def users():
 	}
 	return render_template("users.html", **templateData)
 
-@app.route('/right')
-def right():
-	message = 'great job!'
-	return render_template('right.html', message=message)
-	
-@app.route('/wrong')
-def wrong():
-	message = 'you suck!'
-	return render_template('wrong.html', message=message)
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -107,7 +147,7 @@ def page_not_found(error):
 # start the webserver
 if __name__ == "__main__":
 	app.debug = True
-	
+	app.secret_key = os.environ.get('SECRET_KEY')
 	port = int(os.environ.get('PORT', 5000)) # locally PORT 5000, Heroku will assign its own port
 	app.run(host='0.0.0.0', port=port)
 

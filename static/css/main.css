@@ -1,0 +1,43 @@
+html, body {
+	background-color: #fff;
+	margin:0;
+	padding:0;
+	line-height:1.5em;
+}
+
+#contentwrapper{
+float: left;
+width: 100%;
+}
+
+#left {
+	float:left;
+}
+
+#imgs {
+	
+}
+
+
+
+#hiscore {
+	float:right;
+	width:200px;
+}
+
+#display-score {
+}
+
+#login {
+}
+
+.pageheader {
+	height:50px;
+	text-align:left;
+
+}
+
+.container {
+	width:900px;
+	margin: 5px 10px;
+}
