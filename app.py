@@ -1,23 +1,56 @@
 import os, re, datetime
+import requests
 
 from flask import Flask, request, render_template, redirect, abort # Retrieve Flask, our framework
 from flask import render_template
 from flask import session, url_for, escape
+from flask import jsonify
 
 # import all of mongoengine
-from mongoengine import *
+from flask.ext.mongoengine import mongoengine
 
 # import data models
 import models
 
 
+from flask.ext.login import (LoginManager, current_user, login_required, login_user, logout_user, UserMixin, AnonymousUser, confirm_login, fresh_login_required)
+
+#Library
+from flaskext.bcrypt import Bcrypt
+
+#Custom user library - maps User object to User model
+from libs.user import * 	
+
 app = Flask(__name__)   # create our flask app
 app.config['CSRF_ENABLED'] = False
+app.secret_key = os.environ.get('SECRET_KEY')
+
+flask_bcrypt = Bcrypt(app)
 
 # --------- Database Connection ---------
 # MongoDB connection to MongoLab's database
 connect('mydata', host=os.environ.get('MONGOLAB_URI'))
 print "Connecting to MongoLabs"
+
+login_manager = LoginManager()
+login_manager.anonymous_user = Anonymous
+login_manager.login_view = "login"
+login_manager.login_message = u"Please login to access this page."
+login_manager.refresh_view = "reauth"
+
+@login_manager.user_loader
+def load_user(id):
+	if id is None:
+		redirect('/login')
+		
+	user = User()
+	user.get_by_id(id)
+	if user.is_active():
+		return user
+	else:
+		return None
+
+login_manager.setup_app(app)
 
 
 @app.route('/buildimages', methods=['GET'])
@@ -105,6 +138,7 @@ def index():
 		score = session['score']
 	
 	templeData = {
+		'current_user' : current_user,
 		'images' : images,
 		'user'	: user,
 		'users' : users,
@@ -114,6 +148,34 @@ def index():
 	app.logger.info(user)
 	
 	return render_template("main.html", **templeData)
+
+@app.route('/data/users')
+def data_users():
+	users = models.User.objects().order_by('+timestamp').limit(10)
+	
+	if users:
+		public_users = []
+		for u in users:
+			tmpUser = {
+				'name' : u.name,
+				'score' : u.score,
+				'timestamp' : str(u.timestamp)
+			}
+			public_users.append( tmpUser )
+			
+		data = {
+			'status' : 'OK',
+			'users' : public_users
+		}
+		
+		return jsonify(data)
+	
+	else:
+		error = {
+			'status' : 'error',
+			'msg' : 'unable to retrieve users'
+		}
+		return jsonify(error)
 
 
 
@@ -148,6 +210,24 @@ def users():
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('404.html'), 404
+
+@app.route('/getideas')
+def get_remote_ideas():
+	ideas_url = "http://itp-ideas-dwd.herokuapp.com/data/ideas"
+	idea_request = requests.get(ideas_url)
+	app.logger.info(idea_request.json)
+	ideas_data = idea_request.json
+	
+	if ideas_data.get('status') == "OK":
+			templateData = {
+				'ideas' : ideas_data.get('ideas') # get the ideas from the returned json
+			}
+
+			return render_template('remote_ideas.html', **templateData)
+
+
+	else:
+		return "uhoh something went wrong - status = %s" % ideas_data.get('status')
 
 
 # start the webserver
