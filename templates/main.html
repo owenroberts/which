@@ -2,8 +2,16 @@
 {% extends "layout/main.html" %}
 
 {% block body %}
-
+<div id="login">
+	{% if user == None %}
+	<a href="/login">login</a> or <a href="/register">register</a>
+	{% else %}
+	<p>You are logged in as <b>{{user}}</b></p>
+	<a href="/logout">logout</a>
+	{% endif %}
+</div>
 <div id="left">
+
 	<div id="imgs">
 		<form method="POST" action="/rev">
 			{% for i in images|sort %}
@@ -21,17 +29,9 @@
 		{% endif %}
 	</div>
 
-	<div id="login">
-		{% if user == None %}
-		<a href="/login">login</a>
-		{% else %}
-		<p>You are logged in as <b>{{user}}</b></p>
-		<a href="/logout">logout</a>
-		{% endif %}
-	</div>
 </div>
 <div id="hiscore">
-	<h2>HI SCORES</h2>
+	<h2 style="margin-top:0px;padding-top:0px;">HI SCORES</h2>
 	{% for u in users %}
 	<p><b>{{u.name}}</b> score: {{u.score}}</p>
 	{% endfor %}

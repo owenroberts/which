@@ -22,14 +22,14 @@ from flaskext.bcrypt import Bcrypt
 from libs.user import * 	
 
 app = Flask(__name__)   # create our flask app
-app.config['CSRF_ENABLED'] = False
+#app.config['CSRF_ENABLED'] = False
 app.secret_key = os.environ.get('SECRET_KEY')
 
 flask_bcrypt = Bcrypt(app)
 
 # --------- Database Connection ---------
 # MongoDB connection to MongoLab's database
-connect('mydata', host=os.environ.get('MONGOLAB_URI'))
+mongoengine.connect('mydata', host=os.environ.get('MONGOLAB_URI'))
 print "Connecting to MongoLabs"
 
 login_manager = LoginManager()
@@ -67,6 +67,57 @@ def buildimages():
 	imgnot.save()
 	
 	return "created"
+	
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+	# prepare registration form 
+	registerForm = models.SignupForm(request.form)
+	app.logger.info(request.form)
+
+	if request.method == 'POST' and registerForm.validate():
+		email = request.form['email']
+		username = request.form['name']
+
+		if request.form['password'] != None:
+			# generate password hash
+			password_hash = flask_bcrypt.generate_password_hash(request.form['password'])
+
+		# prepare User
+		user = User(name=username, email=email, password=password_hash)
+
+		# save new user, but there might be exceptions (uniqueness of email and/or username)
+		try:
+			user.save()	
+			if login_user(user, remember="no"):
+				flash("Logged in!")
+				return redirect(request.args.get("next") or '/')
+			else:
+				flash("unable to log you in")
+
+		# got an error, most likely a uniqueness error
+		except mongoengine.queryset.NotUniqueError:
+			e = sys.exc_info()
+			exception, error, obj = e
+
+			app.logger.error(e)
+			app.logger.error(error)
+			app.logger.error(type(error))
+
+			# uniqueness error was raised. tell user (via flash messaging) which error they need to fix.
+			if str(error).find("email") > -1:			
+				flash("Email submitted is already registered.","register")
+
+			elif str(error).find("username") > -1:
+				flash("Username is already registered. Pick another.","register")
+
+			app.logger.error(error)	
+
+	# prepare registration form			
+	templateData = {
+		'form' : registerForm
+	}
+
+	return render_template("/auth/register.html", **templateData)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -205,6 +256,28 @@ def users():
 		'users' : users
 	}
 	return render_template("users.html", **templateData)
+	
+@app.route('/users/<username>')
+def user(username):
+	
+	try:
+		user = models.User.objects.get(username=username)
+	
+	except Exception:
+		e = sys.exc_info()
+		app.logger.error(e)
+		abort(404)
+	
+	user_content = models.Content.objects(user=user)
+	
+	templateData = {
+			'user' : user,
+			'current_user' : current_user,
+			'user_content'  : user_content,
+			'users' : models.User.objects()
+		}
+
+	return render_template('user_content.html', **templateData)
 
 
 @app.errorhandler(404)

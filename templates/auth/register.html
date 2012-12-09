@@ -1,0 +1,83 @@
+{% extends "layout/main.html" %}
+
+{% block body %}
+<div class="row">
+   
+    <div class="register">
+        <h2>Register</h2>
+        
+        {% with messages = get_flashed_messages(category_filter=["register"]) %}
+          {% if messages %}
+            <ul class=flashes>
+            {% for message in messages %}
+              <li class="alert">{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        {% if form.errors %}
+        <ul class="errors">
+            {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+                {% for error in field_errors %}
+                    <li class="alert">{{ form[field_name].label }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+		<div id="reg_wo_pass" style="display:block;">
+			<form action="/login" method="POST">
+				<p><input type="text" name=username>
+				<p><input type=submit value=Submit>
+			</form>
+		</div>
+		
+		
+
+        <div id="reg_w_pass" style="display:none;">
+            <form action="/register" method="POST">
+                {{ form.csrf_token }} <br />
+                {{ form.name.label }} {{ form.name }}<br />
+                {{ form.email.label }} {{ form.email }}<br />
+                {{ form.password.label }} {{ form.password }}<br />
+                {{ form.confirm.label }} {{ form.confirm }}<br />
+                <br>
+                <input type="submit" value="Submit">
+            </form>
+			<br />
+        </div>
+		
+		<a id="toggle_pass" href="#" onclick="toggle_reg();">Click here to register with a password.  (This is not necessary if you don't want one.)</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+function toggle_reg() {
+	var e = document.getElementById('reg_wo_pass');
+	if(e.style.display == 'block')
+         e.style.display = 'none';
+	else
+         e.style.display = 'block';
+
+	var f = document.getElementById('reg_w_pass');
+    if(f.style.display == 'none')
+		f.style.display = 'block';
+    else
+        f.style.display = 'none';
+
+	var i = document.getElementById('toggle_pass');
+	if (i.innerHTML == 'Click here to register with a password.  (This is not necessary if you don\'t want one.)')
+		i.innerHTML = 'Nevermind, I don\'t want a password.';
+	else
+		i.innerHTML = 'Click here to register with a password.  (This is not necessary if you don\'t want one.)';
+
+}
+
+</script>
+{% endblock %}
+
+
+{% block styles %}{% endblock %}
+{% block scripts %}{% endblock %}

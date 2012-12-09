@@ -3,6 +3,7 @@ html, body {
 	margin:0;
 	padding:0;
 	line-height:1.5em;
+	font-family:Helvetica;
 }
 
 #contentwrapper{
@@ -22,17 +23,29 @@ width: 100%;
 
 #hiscore {
 	float:right;
-	width:200px;
+	/* width:200px; 
+	*/
 }
 
 #display-score {
 }
 
 #login {
+	/*text-align:right;
+	width:650px;
+	*/
+}
+
+.register h2 {
+	margin-bottom:0;
+	padding:0;
 }
 
 .pageheader {
-	height:50px;
+	/* height:50px;
+	*/
+	margin:0;
+	padding:0;
 	text-align:left;
 
 }
