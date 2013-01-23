@@ -3,3 +3,4 @@ venv
 *.pyc
 .env
 old stuff
+static/img
