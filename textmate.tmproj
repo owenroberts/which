@@ -33,7 +33,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>139</integer>
+			<integer>0</integer>
 		</dict>
 		<key>libs/user.py</key>
 		<dict>
@@ -179,6 +179,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{54, 0}, {754, 1028}}</string>
+	<string>{{50, 0}, {754, 1028}}</string>
 </dict>
 </plist>

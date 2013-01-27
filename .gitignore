@@ -3,4 +3,5 @@ venv
 *.pyc
 .env
 old stuff
-static/img
+static/img/*
+textmate.tmproj
